@@ -41,24 +41,12 @@ namespace :foreman do
     end
   end
 
-  desc "Start the application services"
-  task :start do
-    on roles fetch(:foreman_roles) do
-      sudo :start, fetch(:foreman_app)
-    end
-  end
-
-  desc "Stop the application services"
-  task :stop do
-    on roles fetch(:foreman_roles) do
-      sudo :stop, fetch(:foreman_app)
-    end
-  end
-
-  desc "Restart the application services"
-  task :restart do
-    on roles fetch(:foreman_roles) do
-      sudo :restart, fetch(:foreman_app)
+  %w(start stop restart).each do |action|
+    desc "#{action.capitalize} the application services"
+    task :"#{action}" do
+      on roles fetch(:foreman_roles) do
+        sudo :"#{action}", fetch(:foreman_app)
+      end
     end
   end
 
