@@ -39,7 +39,10 @@ set :foreman_export_path, '/etc/init'
 set :foreman_flags, "--root=#{current_path}" # optional, default is empty string
 set :foreman_target_path, release_path
 set :foreman_app, -> { fetch(:application) }
+# Foreman < 0.80.0 uses concurrency
 set :foreman_concurrency, 'web=2,worker=1' # optional, default is not set
+# Foreman >= 0.80.0 uses formation
+set :foreman_formation, 'web=2,worker=1' # optional, default is not set
 set :foreman_log, -> { shared_path.join('log') }
 set :foreman_port, 3000 # optional, default is not set
 set :foreman_user, 'www-data' # optional, default is not set

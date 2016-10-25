@@ -24,14 +24,17 @@ namespace :foreman do
   desc "Export the Procfile to another process management format"
   task :export do
     on roles fetch(:foreman_roles) do
-      execute :mkdir, "-p", fetch(:foreman_export_path) unless test "[ -d #{fetch(:foreman_export_path)} ]"
+      execute :mkdir, '-p', fetch(:foreman_export_path) unless test "[ -d #{fetch(:foreman_export_path)} ]"
       within fetch(:foreman_target_path, release_path) do
 
         options = {
           app: fetch(:foreman_app),
           log: fetch(:foreman_log)
         }
+        # Foreman < 0.80.0 uses concurrency
         options[:concurrency] = fetch(:foreman_concurrency) if fetch(:foreman_concurrency)
+        # Foreman >= 0.80.0 uses formation
+        options[:formation] = fetch(:foreman_formation) if fetch(:foreman_formation)
         options[:port] = fetch(:foreman_port) if fetch(:foreman_port)
         options[:user] = fetch(:foreman_user) if fetch(:foreman_user)
 
