@@ -14,6 +14,7 @@ namespace :foreman do
           set :foreman_log, -> { shared_path.join('log') }
           set :foreman_port, 3000 # default is not set
           set :foreman_user, 'www-data' # default is not set
+          set :foreman_init_system, 'upstart' # other option is systemd
     DESC
 
   task :setup do
@@ -44,12 +45,21 @@ namespace :foreman do
     end
   end
 
-  %w(start stop restart).each do |action|
+  %w(start stop restart enable disable).each do |action|
     desc "#{action.capitalize} the application services"
     task :"#{action}" do
       on roles fetch(:foreman_roles) do
-        sudo :"#{action}", fetch(:foreman_app)
+        init_system_exec :"#{action}", fetch(:foreman_app)
       end
+    end
+  end
+
+  def init_system_exec(*args)
+    case fetch(:foreman_init_system).to_sym
+    when :upstart
+      sudo(*args)
+    when :systemd
+      sudo :systemctl, *args
     end
   end
 
@@ -63,5 +73,6 @@ namespace :load do
     set :foreman_flags, ''
     set :foreman_app, -> { fetch(:application) }
     set :foreman_log, -> { shared_path.join('log') }
+    set :foreman_init_system, :upstart
   end
 end
