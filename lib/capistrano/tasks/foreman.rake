@@ -54,12 +54,12 @@ namespace :foreman do
     end
   end
 
-  def init_system_exec(*args)
+  def init_system_exec(action, app)
     case fetch(:foreman_init_system).to_sym
     when :upstart
-      sudo(*args)
+      sudo(action, app)
     when :systemd
-      sudo :systemctl, *args
+      sudo :systemctl, action, "#{app}.target"
     end
   end
 
