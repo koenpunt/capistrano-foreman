@@ -19,6 +19,7 @@ namespace :foreman do
 
   task :setup do
     invoke :'foreman:export'
+    invoke :'foreman:enable' if fetch(:foreman_init_system).to_sym == :systemd
     invoke :'foreman:start'
   end
 
