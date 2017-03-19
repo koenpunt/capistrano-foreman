@@ -45,9 +45,18 @@ namespace :foreman do
     end
   end
 
-  %w(start stop restart enable disable).each do |action|
+  %w(start stop restart).each do |action|
     desc "#{action.capitalize} the application services"
     task :"#{action}" do
+      on roles fetch(:foreman_roles) do
+        exec_action :"#{action}", fetch(:foreman_app)
+      end
+    end
+  end
+
+  %w(enable disable).each do |action|
+    desc "#{action.capitalize} systemd service"
+    task :"#{action}" => [:ensure_systemd] do
       on roles fetch(:foreman_roles) do
         exec_action :"#{action}", fetch(:foreman_app)
       end
