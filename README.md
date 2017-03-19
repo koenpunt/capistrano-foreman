@@ -59,10 +59,15 @@ This gem provides the following Capistrano tasks:
 * `foreman:restart` restarts the application services
 * `foreman:start` starts the application services
 * `foreman:stop` stops the application services
+* `foreman:enable` enables the systemd service
+* `foreman:disable` disables the systemd service
+* `foreman:daemon_reload` reloads the systemd daemon
 
 ## Example
 
-A typical setup would look like the following:
+### Upstart
+
+A typical setup with upstart would look like the following:
 
 Have a group-writeable directory under `/etc/init` for the group `deploy` (in this case I call it `sites`) to store the init scripts:
 
@@ -77,6 +82,43 @@ And the following configuration in `deploy.rb`:
 ```ruby
 # Set the app with `sites/` prefix
 set :foreman_app, -> { "sites/#{fetch(:application)}" }
+
+# Set user to `deploy`, assuming this is your deploy user
+set :foreman_user, 'deploy'
+
+# Set root to `current_path` so exporting only have to be done once.
+set :foreman_flags, "--root=#{current_path}"
+```
+
+Setup your init scripts by running `foreman:setup` after your first deploy.
+From this moment on you only have to run `foreman:setup` when your `Procfile` has changed or when you alter the foreman deploy configuration.
+
+Finally you have to instruct Capistrano to run `foreman:restart` after deploy:
+
+```ruby
+# Hook foreman restart after publishing
+after :'deploy:publishing', :'foreman:restart'
+```
+
+### Systemd
+
+Systemd is a bit different; as it doesn't work well with subdirectories (please let me know if you know otherwise).
+
+Make the `system` directory of systemd writeable for the group `deploy`:
+
+```bash
+sudo chown :deploy /etc/systemd/system
+sudo chmod g+w /etc/systemd/system
+```
+
+And the following configuration in `deploy.rb`:
+
+```ruby
+# Set export format to systemd
+set :foreman_export_format, 'systemd'
+
+# Set path to systemd files
+set :foreman_export_path, '/etc/systemd/system'
 
 # Set user to `deploy`, assuming this is your deploy user
 set :foreman_user, 'deploy'
