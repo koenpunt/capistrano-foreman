@@ -54,6 +54,17 @@ namespace :foreman do
     end
   end
 
+  desc 'Reload systemd daemon'
+  task daemon_reload: [:ensure_systemd] do
+    on roles fetch(:foreman_roles) do
+      sudo :systemctl, 'daemon-reload'
+    end
+  end
+
+  task :ensure_systemd do
+    raise "task only available when using systemd" if fetch(:foreman_export_format).to_sym != :systemd
+  end
+
   def exec_action(action, app)
     case fetch(:foreman_export_format).to_sym
     when :upstart
