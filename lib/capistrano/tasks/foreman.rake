@@ -18,6 +18,7 @@ namespace :foreman do
 
   task :setup do
     invoke :'foreman:export'
+    invoke :'foreman:enable' if fetch(:foreman_export_format).to_sym == :systemd
     invoke :'foreman:start'
   end
 
@@ -48,8 +49,37 @@ namespace :foreman do
     desc "#{action.capitalize} the application services"
     task :"#{action}" do
       on roles fetch(:foreman_roles) do
-        sudo :"#{action}", fetch(:foreman_app)
+        exec_action :"#{action}", fetch(:foreman_app)
       end
+    end
+  end
+
+  %w(enable disable).each do |action|
+    desc "#{action.capitalize} systemd service"
+    task :"#{action}" => [:ensure_systemd] do
+      on roles fetch(:foreman_roles) do
+        exec_action :"#{action}", fetch(:foreman_app)
+      end
+    end
+  end
+
+  desc 'Reload systemd daemon'
+  task daemon_reload: [:ensure_systemd] do
+    on roles fetch(:foreman_roles) do
+      sudo :systemctl, 'daemon-reload'
+    end
+  end
+
+  task :ensure_systemd do
+    raise "task only available when using systemd" if fetch(:foreman_export_format).to_sym != :systemd
+  end
+
+  def exec_action(action, app)
+    case fetch(:foreman_export_format).to_sym
+    when :upstart
+      sudo(action, app)
+    when :systemd
+      sudo :systemctl, action, "#{app}.target"
     end
   end
 
